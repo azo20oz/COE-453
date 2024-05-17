@@ -5,7 +5,7 @@ const MongoClient = require("mongodb").MongoClient; // MongoDB driver
 
 // Replace with your actual MongoDB connection URL
 const mongoUrl =
-  "mongodb+srv://mbiazid:x5j3NrAk5ZDCO95o@finalproject.t5cj1qp.mongodb.net/?retryWrites=true&w=majority&appName=FinalProject";
+  "mongodb+srv://abdulazizmsalbaiz:SiWwGZ5BPGpSngoT@cluster0.mhrfrs7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Construct a schema, using GraphQL schema language
 const schema = buildSchema(`
@@ -31,7 +31,7 @@ const root = {
   hello: () => {
     return "Hello, world!";
   },
-  calculateBMI: async ({ height, weight }) => {
+  calculateBMI: ({ height, weight }) => {
     const bmi = weight / height ** 2;
     return { height, weight, bmi };
   },
@@ -115,6 +115,27 @@ app.post("/calculate-bmi", async (req, res) => {
   }
 });
 
+// REST endpoint to get all BMI records from MongoDB
+app.get("/bmi-records", async (req, res) => {
+  const client = await MongoClient.connect(mongoUrl, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+
+  try {
+    const db = client.db("FinalProject"); // Replace 'FinalProject' with your database name
+    const collection = db.collection("BMI records"); // Replace 'BMI records' with your collection name
+
+    const records = await collection.find().toArray();
+    res.json(records);
+  } catch (err) {
+    console.error("Error fetching BMI records:", err);
+    res.status(500).json({ error: "Failed to fetch BMI records" });
+  } finally {
+    await client.close();
+  }
+});
+
 // GraphQL endpoint
 app.use(
   "/graphql",
@@ -132,4 +153,7 @@ app.listen(4000, () => {
   console.log("Running a server at http://localhost:4000/");
   console.log("GraphQL endpoint available at http://localhost:4000/graphql");
   console.log("REST endpoint available at http://localhost:4000/calculate-bmi");
+  console.log(
+    "REST endpoint for fetching records available at http://localhost:4000/bmi-records"
+  );
 });
